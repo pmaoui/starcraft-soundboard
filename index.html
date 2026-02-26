@@ -1,0 +1,3563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarCraft Soundboard</title>
+    <style>
+        @font-face {
+            font-family: 'Starcraft';
+            src: url('fonts/Starcraft Normal.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Eurostile';
+            src: url('fonts/Eurostile Extended Regular/Eurostile Extended Regular.ttf') format('truetype');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Starcraft', 'Arial', sans-serif;
+            background: #000000;
+            color: #8C9CBA;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #000000;
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 2px solid #B20000;
+        }
+
+        .header img {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+        }
+
+        .header h2 {
+            font-family: 'Starcraft', 'Arial', sans-serif;
+            font-size: 1.2em;
+            color: #8C9CBA;
+            margin-top: 15px;
+            letter-spacing: 3px;
+        }
+
+        .race-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 30px 20px;
+            flex-wrap: wrap;
+            background: #000000;
+        }
+
+        .race-tab {
+            padding: 0;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.6;
+            filter: grayscale(50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .race-tab:hover {
+            opacity: 0.9;
+            filter: grayscale(0%);
+            transform: scale(1.05);
+        }
+
+        .race-tab.active {
+            opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.1);
+        }
+
+        .race-tab img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+        }
+
+        .race-tab span {
+            color: #00FF00;
+            font-size: 1.1em;
+            font-family: 'Eurostile', 'Arial', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .race-tab span .hotkey {
+            color: #39FF14;
+            font-size: 1.2em;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+        }
+
+        .sound-card {
+            background: #000000;
+            border: 2px solid #B20000;
+            border-radius: 3px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sound-card:hover {
+            background: #1a0000;
+            border-color: #FF0000;
+        }
+
+        .sound-card.playing {
+            border-color: #00FF00;
+        }
+
+        .progress-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: rgba(0, 255, 0, 0.15);
+            width: 0%;
+            transition: none;
+            pointer-events: none;
+        }
+
+        .sound-title {
+            flex: 1;
+            font-size: 0.9em;
+            font-family: 'Eurostile', 'Arial', sans-serif;
+            color: #8C9CBA;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #FF0000;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            font-weight: bold;
+            background: #000000;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-play {
+            color: #00FF00;
+            border-color: #00FF00;
+        }
+
+        .btn-play:hover {
+            background: #00FF00;
+            color: #000000;
+        }
+
+        .btn-download {
+            color: #8C9CBA;
+            border-color: #8C9CBA;
+        }
+
+        .btn-download:hover {
+            background: #8C9CBA;
+            color: #000000;
+        }
+
+        .stats {
+            text-align: center;
+            padding: 15px;
+            color: #5A78A0;
+            font-size: 0.9em;
+            font-family: 'Eurostile', 'Arial', sans-serif;
+            background: #000000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .version {
+            position: fixed;
+            bottom: 10px;
+            right: 20px;
+            color: #5A78A0;
+            font-size: 0.85em;
+            font-family: 'Eurostile', 'Arial', sans-serif;
+        }
+
+        @media (max-width: 768px) {
+            .version {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/0a/StarCraft_Logo.png" alt="StarCraft Logo">
+        <h2>SOUNDBOARD</h2>
+    </div>
+
+    <div class="race-tabs">
+        <div class="race-tab terran active" data-race="terran" data-key="t">
+            <img src="sounds/Terran.png" alt="Terran">
+            <span><span class="hotkey">T</span>erran</span>
+        </div>
+        <div class="race-tab zerg" data-race="zerg" data-key="z">
+            <img src="sounds/Zerg.png" alt="Zerg">
+            <span><span class="hotkey">Z</span>erg</span>
+        </div>
+        <div class="race-tab protoss" data-race="protoss" data-key="p">
+            <img src="sounds/Protoss.png" alt="Protoss">
+            <span><span class="hotkey">P</span>rotoss</span>
+        </div>
+        <div class="race-tab misc" data-race="misc" data-key="m">
+            <img src="https://static.wikia.nocookie.net/starcraft/images/2/2c/Starcraft_SC1_Cover1.jpg" alt="Misc">
+            <span><span class="hotkey">M</span>isc</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats" id="stats">Loading sounds...</div>
+        <div class="sound-grid" id="soundGrid"></div>
+    </div>
+
+    <div class="version">v1.00</div>
+
+    <script>
+        const sounds = [
+  {
+    "race": "terran",
+    "title": " Music",
+    "file": "sounds/Terran/_music.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "A Ship Out Of Danger Greetings Command Transmit Or",
+    "file": "sounds/Terran/a_ship_out_of_danger_greetings_command_transmit_or.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "A Vwfrag This Commander How Do I Get Out Of This C",
+    "file": "sounds/Terran/a_vwfrag_this_commander_how_do_i_get_out_of_this_c.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Absolutely",
+    "file": "sounds/Terran/absolutely.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Add It",
+    "file": "sounds/Terran/add_it.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Additional Supply Depots Required Landing Sequence",
+    "file": "sounds/Terran/additional_supply_depots_required_landing_sequence.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Affirmative Sir",
+    "file": "sounds/Terran/affirmative_sir.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Ah Easily Amused Huh Doesnt Take A Telepath To Kno",
+    "file": "sounds/Terran/ah_easily_amused_huh_doesnt_take_a_telepath_to_kno.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Ahhhhhhhh",
+    "file": "sounds/Terran/ahhhhhhhh.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Alright Then",
+    "file": "sounds/Terran/alright_then.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Alright Tim",
+    "file": "sounds/Terran/alright_tim.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "And Dispense Some Indiscriminate Justice",
+    "file": "sounds/Terran/and_dispense_some_indiscriminate_justice.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Anytime Youre Ready",
+    "file": "sounds/Terran/anytime_youre_ready.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Are You Trying To Get Invited To My Next Barbecue ",
+    "file": "sounds/Terran/are_you_trying_to_get_invited_to_my_next_barbecue_.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Base Is Under Attack",
+    "file": "sounds/Terran/base_is_under_attack.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Been A General For 15 Years",
+    "file": "sounds/Terran/been_a_general_for_15_years.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Been A General For 15 Years Now Im Taking Orders F",
+    "file": "sounds/Terran/been_a_general_for_15_years_now_im_taking_orders_f.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Bout Time",
+    "file": "sounds/Terran/bout_time.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Breed Yes Sir",
+    "file": "sounds/Terran/breed_yes_sir.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Checklist Protocol Initiated Running Level 1 Diagn",
+    "file": "sounds/Terran/checklist_protocol_initiated_running_level_1_diagn.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Come Again Captain",
+    "file": "sounds/Terran/come_again_captain.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Conway Online Convert",
+    "file": "sounds/Terran/conway_online_convert.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Daddaddaddaddaddaddaddadd",
+    "file": "sounds/Terran/daddaddaddaddaddaddaddadd.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Decise Of Action",
+    "file": "sounds/Terran/decise_of_action.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Destination",
+    "file": "sounds/Terran/destination.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Everybodys Got A Death Sometime Right",
+    "file": "sounds/Terran/everybodys_got_a_death_sometime_right.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Fdic Approved Check List Completed Sob",
+    "file": "sounds/Terran/fdic_approved_check_list_completed_sob.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "For Current\u950b\u540d Please Do Consider Another T\u4ec0\u9ebc",
+    "file": "sounds/Terran/for_current\u950b\u540d_please_do_consider_another_t\u4ec0\u9ebc.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Friends",
+    "file": "sounds/Terran/friends.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Go Ahead Command Transmit Coordinates Standing By ",
+    "file": "sounds/Terran/go_ahead_command_transmit_coordinates_standing_by_.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Go Ahead Commander Sounds Fun Ride On",
+    "file": "sounds/Terran/go_ahead_commander_sounds_fun_ride_on.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Go Ahead Hq Im Listening Destination Input Coordin",
+    "file": "sounds/Terran/go_ahead_hq_im_listening_destination_input_coordin.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Go Go Go Lets Move Outstanding Rock In Roll",
+    "file": "sounds/Terran/go_go_go_lets_move_outstanding_rock_in_roll.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Go To St Martin",
+    "file": "sounds/Terran/go_to_st_martin.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Ha Dig",
+    "file": "sounds/Terran/ha_dig.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Hang On Were In For Some Chop In Transit Hq Buckle",
+    "file": "sounds/Terran/hang_on_were_in_for_some_chop_in_transit_hq_buckle.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Hey Hey Hey Hey Hey",
+    "file": "sounds/Terran/hey_hey_hey_hey_hey.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Hey Howd I Get Here",
+    "file": "sounds/Terran/hey_howd_i_get_here.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Hey Quitted Whats Your Problem Man Look Commander ",
+    "file": "sounds/Terran/hey_quitted_whats_your_problem_man_look_commander_.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Hey There",
+    "file": "sounds/Terran/hey_there.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Hmm Fusion A Ill Have To Remember That",
+    "file": "sounds/Terran/hmm_fusion_a_ill_have_to_remember_that.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "How Yall Doing",
+    "file": "sounds/Terran/how_yall_doing.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Am Propane Accessories",
+    "file": "sounds/Terran/i_am_propane_accessories.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Am The Admittable Thats Right",
+    "file": "sounds/Terran/i_am_the_admittable_thats_right.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Cant Build It Somethings In The Way",
+    "file": "sounds/Terran/i_cant_build_it_somethings_in_the_way.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Cant Build There",
+    "file": "sounds/Terran/i_cant_build_there.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Gotta Just Gotta Remove Am I An Urban",
+    "file": "sounds/Terran/i_gotta_just_gotta_remove_am_i_an_urban.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Havent Got All Day",
+    "file": "sounds/Terran/i_havent_got_all_day.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Knew I Should Have Stayed In Bed This Morning",
+    "file": "sounds/Terran/i_knew_i_should_have_stayed_in_bed_this_morning.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Like The Kind Of You Jibble E Equals Nc Dont Let",
+    "file": "sounds/Terran/i_like_the_kind_of_you_jibble_e_equals_nc_dont_let.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Love The Smell Of The Bomb",
+    "file": "sounds/Terran/i_love_the_smell_of_the_bomb.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Rage It We Gotta Move Are You Gonna Give Me Orde",
+    "file": "sounds/Terran/i_rage_it_we_gotta_move_are_you_gonna_give_me_orde.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Review You",
+    "file": "sounds/Terran/i_review_you.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Tell You What I Think Ill Join Up",
+    "file": "sounds/Terran/i_tell_you_what_i_think_ill_join_up.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "I Wanna Be All I Can Be",
+    "file": "sounds/Terran/i_wanna_be_all_i_can_be.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Identify Target Orders Serve",
+    "file": "sounds/Terran/identify_target_orders_serve.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Identify Yourself Shields Up Weapons Online Anothe",
+    "file": "sounds/Terran/identify_yourself_shields_up_weapons_online_anothe.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "If You Got It Lets Go",
+    "file": "sounds/Terran/if_you_got_it_lets_go.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Im A Little Claustrophobic Though",
+    "file": "sounds/Terran/im_a_little_claustrophobic_though.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Im About To Drop The Hammer",
+    "file": "sounds/Terran/im_about_to_drop_the_hammer.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Im Here Never Know What Hit Us Im All Over It",
+    "file": "sounds/Terran/im_here_never_know_what_hit_us_im_all_over_it.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Im Just Curious Why Am I So Good I Gotta Get Me On",
+    "file": "sounds/Terran/im_just_curious_why_am_i_so_good_i_gotta_get_me_on.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Im Not Reading You Clearly",
+    "file": "sounds/Terran/im_not_reading_you_clearly.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Im Ready I Gotcha Thinking The Same Thing Itd Be A",
+    "file": "sounds/Terran/im_ready_i_gotcha_thinking_the_same_thing_itd_be_a.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Im Saucy Here Tatternafrog Button Of Watermail And",
+    "file": "sounds/Terran/im_saucy_here_tatternafrog_button_of_watermail_and.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Insufficient Fest Being Gas",
+    "file": "sounds/Terran/insufficient_fest_being_gas.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Is Something Burning",
+    "file": "sounds/Terran/is_something_burning.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "It \u0388\u03c7\u03b5\u03b9",
+    "file": "sounds/Terran/it_\u03ad\u03c7\u03b5\u03b9.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Its Cb Good To Go Sir",
+    "file": "sounds/Terran/its_cb_good_to_go_sir.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Jobs Finished",
+    "file": "sounds/Terran/jobs_finished.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Keep It Up I Dare You Im About To Overload My Aggr",
+    "file": "sounds/Terran/keep_it_up_i_dare_you_im_about_to_overload_my_aggr.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Kun Doesnt Come Cloan",
+    "file": "sounds/Terran/kun_doesnt_come_cloan.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Life Is Going Heavy Fre\u1ed1n",
+    "file": "sounds/Terran/life_is_going_heavy_fre\u1ed1n.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Make It Happen Set The Course Take It Slow",
+    "file": "sounds/Terran/make_it_happen_set_the_course_take_it_slow.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Make Up Your Mind About Time",
+    "file": "sounds/Terran/make_up_your_mind_about_time.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Movie Pro Scene Deleted To Serve",
+    "file": "sounds/Terran/movie_pro_scene_deleted_to_serve.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Need A Light Yes",
+    "file": "sounds/Terran/need_a_light_yes.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "No Problem",
+    "file": "sounds/Terran/no_problem.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Nooooooooo Noooooooooooo",
+    "file": "sounds/Terran/nooooooooo_noooooooooooo.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Nosdaku Bad Breath Angel Eye All",
+    "file": "sounds/Terran/nosdaku_bad_breath_angel_eye_all.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Not Enough Energy",
+    "file": "sounds/Terran/not_enough_energy.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Not Enough Minerals",
+    "file": "sounds/Terran/not_enough_minerals.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Nothing Like A Good Smoke",
+    "file": "sounds/Terran/nothing_like_a_good_smoke.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Now Im Taking Orders From A Pub",
+    "file": "sounds/Terran/now_im_taking_orders_from_a_pub.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Now Reap The Whirlwind",
+    "file": "sounds/Terran/now_reap_the_whirlwind.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Nuclear Launch Detected Abandoning Auxiliary Struc",
+    "file": "sounds/Terran/nuclear_launch_detected_abandoning_auxiliary_struc.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Oh Is That It",
+    "file": "sounds/Terran/oh_is_that_it.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Ohhhhh Hey Quitted Whats Your Problem Math Look Co",
+    "file": "sounds/Terran/ohhhhh_hey_quitted_whats_your_problem_math_look_co.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "One Turn Of Hate Naturally",
+    "file": "sounds/Terran/one_turn_of_hate_naturally.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Order A Serious Order",
+    "file": "sounds/Terran/order_a_serious_order.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Orders Cabin",
+    "file": "sounds/Terran/orders_cabin.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Procibe Guess It Like That",
+    "file": "sounds/Terran/procibe_guess_it_like_that.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Rainer Here This Is Jimmy",
+    "file": "sounds/Terran/rainer_here_this_is_jimmy.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Rainer Here This Is Jimmy Anytime Youre Ready Go A",
+    "file": "sounds/Terran/rainer_here_this_is_jimmy_anytime_youre_ready_go_a.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Read The Waiting On Jorders",
+    "file": "sounds/Terran/read_the_waiting_on_jorders.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Ready To Roll Out",
+    "file": "sounds/Terran/ready_to_roll_out.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Receiving Headquarters",
+    "file": "sounds/Terran/receiving_headquarters.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Reporting For Duties Affirmative",
+    "file": "sounds/Terran/reporting_for_duties_affirmative.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Right Away Sir",
+    "file": "sounds/Terran/right_away_sir.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 011",
+    "file": "sounds/Terran/sfx_011.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 012",
+    "file": "sounds/Terran/sfx_012.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 013",
+    "file": "sounds/Terran/sfx_013.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 015",
+    "file": "sounds/Terran/sfx_015.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 017",
+    "file": "sounds/Terran/sfx_017.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 019",
+    "file": "sounds/Terran/sfx_019.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 020",
+    "file": "sounds/Terran/sfx_020.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 023",
+    "file": "sounds/Terran/sfx_023.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 025",
+    "file": "sounds/Terran/sfx_025.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 026",
+    "file": "sounds/Terran/sfx_026.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 052",
+    "file": "sounds/Terran/sfx_052.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 056",
+    "file": "sounds/Terran/sfx_056.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 061",
+    "file": "sounds/Terran/sfx_061.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 062",
+    "file": "sounds/Terran/sfx_062.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 063",
+    "file": "sounds/Terran/sfx_063.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 076",
+    "file": "sounds/Terran/sfx_076.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 078",
+    "file": "sounds/Terran/sfx_078.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 079",
+    "file": "sounds/Terran/sfx_079.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 092",
+    "file": "sounds/Terran/sfx_092.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 116",
+    "file": "sounds/Terran/sfx_116.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 117",
+    "file": "sounds/Terran/sfx_117.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 118",
+    "file": "sounds/Terran/sfx_118.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 119",
+    "file": "sounds/Terran/sfx_119.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 120",
+    "file": "sounds/Terran/sfx_120.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 124",
+    "file": "sounds/Terran/sfx_124.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 125",
+    "file": "sounds/Terran/sfx_125.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 133",
+    "file": "sounds/Terran/sfx_133.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 150",
+    "file": "sounds/Terran/sfx_150.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 151",
+    "file": "sounds/Terran/sfx_151.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 152",
+    "file": "sounds/Terran/sfx_152.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 153",
+    "file": "sounds/Terran/sfx_153.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 162",
+    "file": "sounds/Terran/sfx_162.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Sfx 163",
+    "file": "sounds/Terran/sfx_163.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Short Thing",
+    "file": "sounds/Terran/short_thing.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Should Work",
+    "file": "sounds/Terran/should_work.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Shut Up",
+    "file": "sounds/Terran/shut_up.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Slamming",
+    "file": "sounds/Terran/slamming.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "So The Mouse Claw After Folding I Gotta Get Outta ",
+    "file": "sounds/Terran/so_the_mouse_claw_after_folding_i_gotta_get_outta_.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Somebody Call For An Exterminator",
+    "file": "sounds/Terran/somebody_call_for_an_exterminator.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Something On Your Mind",
+    "file": "sounds/Terran/something_on_your_mind.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Something You Wanted I Dont Have Time To Fuck Arou",
+    "file": "sounds/Terran/something_you_wanted_i_dont_have_time_to_fuck_arou.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Stand By Checked Up And Good To Go Give Me Somethi",
+    "file": "sounds/Terran/stand_by_checked_up_and_good_to_go_give_me_somethi.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Target Designation",
+    "file": "sounds/Terran/target_designation.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Thats What I Thought",
+    "file": "sounds/Terran/thats_what_i_thought.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "The Bible",
+    "file": "sounds/Terran/the_bible.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "The Meaning Of Your Fools Know How To Shut Off Thi",
+    "file": "sounds/Terran/the_meaning_of_your_fools_know_how_to_shut_off_thi.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Theres A Core Hole Out There To Mess",
+    "file": "sounds/Terran/theres_a_core_hole_out_there_to_mess.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Theres Gold Hell Outfitting Masks",
+    "file": "sounds/Terran/theres_gold_hell_outfitting_masks.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "They Dont Put Me In Any Tight Spaces",
+    "file": "sounds/Terran/they_dont_put_me_in_any_tight_spaces.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "This Should Be Good Oh Yeah",
+    "file": "sounds/Terran/this_should_be_good_oh_yeah.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "To Hurl Chunks Please Use The Vomit Bag In Front O",
+    "file": "sounds/Terran/to_hurl_chunks_please_use_the_vomit_bag_in_front_o.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Ualalalala Ruler Summits Shareholders Audiobooks O",
+    "file": "sounds/Terran/ualalalala_ruler_summits_shareholders_audiobooks_o.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Unacceptable Landing Zone",
+    "file": "sounds/Terran/unacceptable_landing_zone.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "We Have You On Visual Lets Roll Excellent Commenci",
+    "file": "sounds/Terran/we_have_you_on_visual_lets_roll_excellent_commenci.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Well Im A Girl Today Make Up Your Mind",
+    "file": "sounds/Terran/well_im_a_girl_today_make_up_your_mind.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "What Is Your Major Malfunction",
+    "file": "sounds/Terran/what_is_your_major_malfunction.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "What The Hell I Need That College Money",
+    "file": "sounds/Terran/what_the_hell_i_need_that_college_money.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Whats Up",
+    "file": "sounds/Terran/whats_up.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "When Removing Your Overhead Luggage Please Be Care",
+    "file": "sounds/Terran/when_removing_your_overhead_luggage_please_be_care.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Who Said All These Lab Monkeys Free I Think We May",
+    "file": "sounds/Terran/who_said_all_these_lab_monkeys_free_i_think_we_may.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Worred",
+    "file": "sounds/Terran/worred.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Yeah Ill Reach It Sir",
+    "file": "sounds/Terran/yeah_ill_reach_it_sir.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Yeah Im Going",
+    "file": "sounds/Terran/yeah_im_going.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You Aint Far Out Here Are You I Cant Believe They ",
+    "file": "sounds/Terran/you_aint_far_out_here_are_you_i_cant_believe_they_.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You All Need Some Good Old Fashioned Discipline Th",
+    "file": "sounds/Terran/you_all_need_some_good_old_fashioned_discipline_th.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You All Need Some Good Old Fashioned Discipline Th 1",
+    "file": "sounds/Terran/you_all_need_some_good_old_fashioned_discipline_th_1.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You Coiled Down The Thunder",
+    "file": "sounds/Terran/you_coiled_down_the_thunder.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You Got My Attention",
+    "file": "sounds/Terran/you_got_my_attention.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You Keep Pushing Me Boy And Ill Scrap You Along Wi",
+    "file": "sounds/Terran/you_keep_pushing_me_boy_and_ill_scrap_you_along_wi.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You Know Who The Best Star Fighter In The Fleet Is",
+    "file": "sounds/Terran/you_know_who_the_best_star_fighter_in_the_fleet_is.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You May Have Time To Play Games But Ive Got A Job ",
+    "file": "sounds/Terran/you_may_have_time_to_play_games_but_ive_got_a_job_.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "You Want A Piece Of Me Boy If It Werent For These ",
+    "file": "sounds/Terran/you_want_a_piece_of_me_boy_if_it_werent_for_these_.mp3"
+  },
+  {
+    "race": "terran",
+    "title": "Your Forces Are Under Attack Research Complete Add",
+    "file": "sounds/Terran/your_forces_are_under_attack_research_complete_add.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "A Uncle Eight",
+    "file": "sounds/Zerg/a_uncle_eight.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Aaargh",
+    "file": "sounds/Zerg/aaargh.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Actress",
+    "file": "sounds/Zerg/actress.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Addicted To Lambda",
+    "file": "sounds/Zerg/addicted_to_lambda.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Again And Still Playing The Doorway To The End Dra",
+    "file": "sounds/Zerg/again_and_still_playing_the_doorway_to_the_end_dra.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Ah",
+    "file": "sounds/Zerg/ah.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Ah Ah Ah Ah Ah",
+    "file": "sounds/Zerg/ah_ah_ah_ah_ah.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Ahhh That Was",
+    "file": "sounds/Zerg/ahhh_that_was.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Alright",
+    "file": "sounds/Zerg/alright.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Andre Ramesh",
+    "file": "sounds/Zerg/andre_ramesh.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Awesome",
+    "file": "sounds/Zerg/awesome.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Baaa Baaa Baaa Baaa Baaa",
+    "file": "sounds/Zerg/baaa_baaa_baaa_baaa_baaa.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Boo Kelly",
+    "file": "sounds/Zerg/boo_kelly.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Breathe",
+    "file": "sounds/Zerg/breathe.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "But I Yes",
+    "file": "sounds/Zerg/but_i_yes.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Cant Stop Us",
+    "file": "sounds/Zerg/cant_stop_us.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Capuuer L\u00ed Smack Wanna Know The Screen Whats Wrong",
+    "file": "sounds/Zerg/capuuer_l\u00ed_smack_wanna_know_the_screen_whats_wrong.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Continuous Trauma",
+    "file": "sounds/Zerg/continuous_trauma.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Cooper The",
+    "file": "sounds/Zerg/cooper_the.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Dances Hey Why Did You Do That So Much",
+    "file": "sounds/Zerg/dances_hey_why_did_you_do_that_so_much.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Die I Find No More",
+    "file": "sounds/Zerg/die_i_find_no_more.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Dont Think That I Need You",
+    "file": "sounds/Zerg/dont_think_that_i_need_you.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Evolution Complete",
+    "file": "sounds/Zerg/evolution_complete.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "F Visa",
+    "file": "sounds/Zerg/f_visa.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Faster",
+    "file": "sounds/Zerg/faster.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "For Association\u52a0\u5165",
+    "file": "sounds/Zerg/for_association\u52a0\u5165.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Freyyy Adam",
+    "file": "sounds/Zerg/freyyy_adam.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Fuckit Jokling",
+    "file": "sounds/Zerg/fuckit_jokling.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Genau",
+    "file": "sounds/Zerg/genau.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Get Out",
+    "file": "sounds/Zerg/get_out.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Glooooooom",
+    "file": "sounds/Zerg/glooooooom.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Glover Who Won",
+    "file": "sounds/Zerg/glover_who_won.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Good Morning Good Morning All Are Trying To Help H",
+    "file": "sounds/Zerg/good_morning_good_morning_all_are_trying_to_help_h.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Got It ",
+    "file": "sounds/Zerg/got_it_.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "H \uc131 Dumplings",
+    "file": "sounds/Zerg/h_\uc131_dumplings.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Hahaha",
+    "file": "sounds/Zerg/hahaha.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Hard Is It Games",
+    "file": "sounds/Zerg/hard_is_it_games.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Here Are The Three People Of Pin Tonight",
+    "file": "sounds/Zerg/here_are_the_three_people_of_pin_tonight.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Here We Gosels 3 Wait Wait Wait Wait Wait No Haven",
+    "file": "sounds/Zerg/here_we_gosels_3_wait_wait_wait_wait_wait_no_haven.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Here You Are",
+    "file": "sounds/Zerg/here_you_are.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Hi\u00e7bir\u043e\u0433",
+    "file": "sounds/Zerg/hi\u00e7bir\u043e\u0433.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "I Am Russian But I Am Strong I Am The Future I Am ",
+    "file": "sounds/Zerg/i_am_russian_but_i_am_strong_i_am_the_future_i_am_.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Ill Kill You Myself",
+    "file": "sounds/Zerg/ill_kill_you_myself.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Im Bored Marie Gayle ",
+    "file": "sounds/Zerg/im_bored_marie_gayle_.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Im Listening",
+    "file": "sounds/Zerg/im_listening.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Inferno",
+    "file": "sounds/Zerg/inferno.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Irstro Nosing Ecipe ",
+    "file": "sounds/Zerg/irstro_nosing_ecipe_.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Its Shit",
+    "file": "sounds/Zerg/its_shit.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Julia Comes To My Vehicle",
+    "file": "sounds/Zerg/julia_comes_to_my_vehicle.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Junction",
+    "file": "sounds/Zerg/junction.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Kill Them",
+    "file": "sounds/Zerg/kill_them.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Less Words Boom",
+    "file": "sounds/Zerg/less_words_boom.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Let Me Get Living Here Glad To Be Here",
+    "file": "sounds/Zerg/let_me_get_living_here_glad_to_be_here.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Let Me Show You",
+    "file": "sounds/Zerg/let_me_show_you.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Mm \uadf8\ub0e5 2",
+    "file": "sounds/Zerg/mm_\uadf8\ub0e5_2.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Morrishtheim",
+    "file": "sounds/Zerg/morrishtheim.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Motherfup\u6f80",
+    "file": "sounds/Zerg/motherfup\u6f80.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Motivation",
+    "file": "sounds/Zerg/motivation.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Murderer",
+    "file": "sounds/Zerg/murderer.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "My Cutesqushaped Warks This Is A Bonus Description",
+    "file": "sounds/Zerg/my_cutesqushaped_warks_this_is_a_bonus_description.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Nyaaah Nyaaah Nyaaah",
+    "file": "sounds/Zerg/nyaaah_nyaaah_nyaaah.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Oh Come On",
+    "file": "sounds/Zerg/oh_come_on.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Oh Ho",
+    "file": "sounds/Zerg/oh_ho.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Oh Lord",
+    "file": "sounds/Zerg/oh_lord.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Part Protege You",
+    "file": "sounds/Zerg/part_protege_you.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Pioneer Number 10\u641e\u9519 You\u306a\u30e3\u30e3\u30e3\u30e3\u50bb\u30ea\u30ba\u4e00\u4e2a",
+    "file": "sounds/Zerg/pioneer_number_10\u641e\u9519_you\u306a\u30e3\u30e3\u30e3\u30e3\u50bb\u30ea\u30ba\u4e00\u4e2a.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Pokemon",
+    "file": "sounds/Zerg/pokemon.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Ppennie Madaaaaa ",
+    "file": "sounds/Zerg/ppennie_madaaaaa_.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Qhhhhhhhhhhhhhhhhhhhhmusic",
+    "file": "sounds/Zerg/qhhhhhhhhhhhhhhhhhhhhmusic.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Rais Shhh Shhh Shhh Shhh Shhh Shhh Shhh Shhh",
+    "file": "sounds/Zerg/rais_shhh_shhh_shhh_shhh_shhh_shhh_shhh_shhh.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Revving",
+    "file": "sounds/Zerg/revving.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Santa Zebra Fighting Del\u5b50 Yes",
+    "file": "sounds/Zerg/santa_zebra_fighting_del\u5b50_yes.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Semble",
+    "file": "sounds/Zerg/semble.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 003",
+    "file": "sounds/Zerg/sfx_003.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 006",
+    "file": "sounds/Zerg/sfx_006.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 014",
+    "file": "sounds/Zerg/sfx_014.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 018",
+    "file": "sounds/Zerg/sfx_018.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 019",
+    "file": "sounds/Zerg/sfx_019.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 020",
+    "file": "sounds/Zerg/sfx_020.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 023",
+    "file": "sounds/Zerg/sfx_023.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 025",
+    "file": "sounds/Zerg/sfx_025.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 032",
+    "file": "sounds/Zerg/sfx_032.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 045",
+    "file": "sounds/Zerg/sfx_045.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 048",
+    "file": "sounds/Zerg/sfx_048.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 050",
+    "file": "sounds/Zerg/sfx_050.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 051",
+    "file": "sounds/Zerg/sfx_051.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 055",
+    "file": "sounds/Zerg/sfx_055.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 056",
+    "file": "sounds/Zerg/sfx_056.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 059",
+    "file": "sounds/Zerg/sfx_059.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 060",
+    "file": "sounds/Zerg/sfx_060.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 061",
+    "file": "sounds/Zerg/sfx_061.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 063",
+    "file": "sounds/Zerg/sfx_063.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 067",
+    "file": "sounds/Zerg/sfx_067.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 071",
+    "file": "sounds/Zerg/sfx_071.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 073",
+    "file": "sounds/Zerg/sfx_073.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 074",
+    "file": "sounds/Zerg/sfx_074.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 076",
+    "file": "sounds/Zerg/sfx_076.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 079",
+    "file": "sounds/Zerg/sfx_079.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 080",
+    "file": "sounds/Zerg/sfx_080.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 083",
+    "file": "sounds/Zerg/sfx_083.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 086",
+    "file": "sounds/Zerg/sfx_086.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 088",
+    "file": "sounds/Zerg/sfx_088.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 091",
+    "file": "sounds/Zerg/sfx_091.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 093",
+    "file": "sounds/Zerg/sfx_093.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 094",
+    "file": "sounds/Zerg/sfx_094.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 095",
+    "file": "sounds/Zerg/sfx_095.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 103",
+    "file": "sounds/Zerg/sfx_103.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 112",
+    "file": "sounds/Zerg/sfx_112.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 115",
+    "file": "sounds/Zerg/sfx_115.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 116",
+    "file": "sounds/Zerg/sfx_116.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 117",
+    "file": "sounds/Zerg/sfx_117.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 118",
+    "file": "sounds/Zerg/sfx_118.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 120",
+    "file": "sounds/Zerg/sfx_120.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 123",
+    "file": "sounds/Zerg/sfx_123.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 125",
+    "file": "sounds/Zerg/sfx_125.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 129",
+    "file": "sounds/Zerg/sfx_129.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 130",
+    "file": "sounds/Zerg/sfx_130.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 132",
+    "file": "sounds/Zerg/sfx_132.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 133",
+    "file": "sounds/Zerg/sfx_133.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 149",
+    "file": "sounds/Zerg/sfx_149.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 151",
+    "file": "sounds/Zerg/sfx_151.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 152",
+    "file": "sounds/Zerg/sfx_152.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sfx 154",
+    "file": "sounds/Zerg/sfx_154.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Shhhhhhhhhhhhhhh",
+    "file": "sounds/Zerg/shhhhhhhhhhhhhhh.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Should You Become A New Self",
+    "file": "sounds/Zerg/should_you_become_a_new_self.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Sho\u600e\u9ebc\u6a23 Awashinoji Deogamyagasa",
+    "file": "sounds/Zerg/sho\u600e\u9ebc\u6a23_awashinoji_deogamyagasa.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Side Defence",
+    "file": "sounds/Zerg/side_defence.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Some Fucking",
+    "file": "sounds/Zerg/some_fucking.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Spooky",
+    "file": "sounds/Zerg/spooky.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Subscribe My Channel",
+    "file": "sounds/Zerg/subscribe_my_channel.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Subscribe Stop Point",
+    "file": "sounds/Zerg/subscribe_stop_point.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Thank You So Much",
+    "file": "sounds/Zerg/thank_you_so_much.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "That Col Comes Back Mail To Languages That No Wind",
+    "file": "sounds/Zerg/that_col_comes_back_mail_to_languages_that_no_wind.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "The Ahn",
+    "file": "sounds/Zerg/the_ahn.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "The Doctor Has Got His Meal",
+    "file": "sounds/Zerg/the_doctor_has_got_his_meal.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "The Man Extremely Was Sucking The Hasta",
+    "file": "sounds/Zerg/the_man_extremely_was_sucking_the_hasta.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "These Could Be Flip Just Like In The Presentation ",
+    "file": "sounds/Zerg/these_could_be_flip_just_like_in_the_presentation_.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Thisthrough Perfectly",
+    "file": "sounds/Zerg/thisthrough_perfectly.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Tie Them Up Untie Them Untie Them Now",
+    "file": "sounds/Zerg/tie_them_up_untie_them_untie_them_now.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Touwa 4",
+    "file": "sounds/Zerg/touwa_4.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Triuch That And Satoshi What Its Is The 123 Very P",
+    "file": "sounds/Zerg/triuch_that_and_satoshi_what_its_is_the_123_very_p.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Unwining",
+    "file": "sounds/Zerg/unwining.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Vdramatic Music",
+    "file": "sounds/Zerg/vdramatic_music.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Velocity",
+    "file": "sounds/Zerg/velocity.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Wberrffffff ",
+    "file": "sounds/Zerg/wberrffffff_.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "We Are The Wen Defensive System And Thats Him Righ",
+    "file": "sounds/Zerg/we_are_the_wen_defensive_system_and_thats_him_righ.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "We Just Need To Philosophize Background Work To En",
+    "file": "sounds/Zerg/we_just_need_to_philosophize_background_work_to_en.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "We Require More Minerals",
+    "file": "sounds/Zerg/we_require_more_minerals.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "We Require More Vespine Gas Spawn More Overlords N",
+    "file": "sounds/Zerg/we_require_more_vespine_gas_spawn_more_overlords_n.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "What Is It Now",
+    "file": "sounds/Zerg/what_is_it_now.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "What The F What Are You Doing",
+    "file": "sounds/Zerg/what_the_f_what_are_you_doing.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Where Are You ",
+    "file": "sounds/Zerg/where_are_you_.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Wingodie \uc870\ub9cc Yeah Yeah Yeah Trooper Leggo Forgotten",
+    "file": "sounds/Zerg/wingodie_\uc870\ub9cc_yeah_yeah_yeah_trooper_leggo_forgotten.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Yes Celebrate",
+    "file": "sounds/Zerg/yes_celebrate.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "You Begin To Annoy Me Servant",
+    "file": "sounds/Zerg/you_begin_to_annoy_me_servant.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "Z\u53cdYa",
+    "file": "sounds/Zerg/z\u53cdya.mp3"
+  },
+  {
+    "race": "zerg",
+    "title": "\u4fbf Taste The Internet",
+    "file": "sounds/Zerg/\u4fbf_taste_the_internet.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": " ",
+    "file": "sounds/Protoss/_.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": " Particle Sound",
+    "file": "sounds/Protoss/_particle_sound.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Ahahaha",
+    "file": "sounds/Protoss/ahahaha.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Amensoon Roboooo",
+    "file": "sounds/Protoss/amensoon_roboooo.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "An Authorized Transmission Indirect Critical Throu",
+    "file": "sounds/Protoss/an_authorized_transmission_indirect_critical_throu.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "And Now You Beg Us To Aid You",
+    "file": "sounds/Protoss/and_now_you_beg_us_to_aid_you.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "And Practice",
+    "file": "sounds/Protoss/and_practice.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "And Still You Procrastinate",
+    "file": "sounds/Protoss/and_still_you_procrastinate.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "And We Invite The Seized Back Back In Minutes",
+    "file": "sounds/Protoss/and_we_invite_the_seized_back_back_in_minutes.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Ankind",
+    "file": "sounds/Protoss/ankind.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Applause",
+    "file": "sounds/Protoss/applause.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Argggg",
+    "file": "sounds/Protoss/argggg.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Assam\uc154\uc11cS",
+    "file": "sounds/Protoss/assam\uc154\uc11cs.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Awaiting Instructions",
+    "file": "sounds/Protoss/awaiting_instructions.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Beep Beep Beep Beep Beep",
+    "file": "sounds/Protoss/beep_beep_beep_beep_beep.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Binrod",
+    "file": "sounds/Protoss/binrod.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Bjshhesioilnirrentr Piece",
+    "file": "sounds/Protoss/bjshhesioilnirrentr_piece.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Blito Qu",
+    "file": "sounds/Protoss/blito_qu.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Blue Shit",
+    "file": "sounds/Protoss/blue_shit.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Break All Through",
+    "file": "sounds/Protoss/break_all_through.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Brother",
+    "file": "sounds/Protoss/brother.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "But I Find Your Lack Of Control Disturbing",
+    "file": "sounds/Protoss/but_i_find_your_lack_of_control_disturbing.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "But We Do It For Higher Not You",
+    "file": "sounds/Protoss/but_we_do_it_for_higher_not_you.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Cauuj\u4e9b",
+    "file": "sounds/Protoss/cauuj\u4e9b.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Cio Azir Without Further Ado",
+    "file": "sounds/Protoss/cio_azir_without_further_ado.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Clea Uh",
+    "file": "sounds/Protoss/clea_uh.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Cmon Man",
+    "file": "sounds/Protoss/cmon_man.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Come As Denis Daccord Drew Um",
+    "file": "sounds/Protoss/come_as_denis_daccord_drew_um.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Command Or You Will Be Relieved This Is Not An Idl",
+    "file": "sounds/Protoss/command_or_you_will_be_relieved_this_is_not_an_idl.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Commencing",
+    "file": "sounds/Protoss/commencing.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Confirmed Initiated",
+    "file": "sounds/Protoss/confirmed_initiated.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Cribi Got \u314e\u314e",
+    "file": "sounds/Protoss/cribi_got_\u314e\u314e.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Cus I Funded Our Owncomment As 100",
+    "file": "sounds/Protoss/cus_i_funded_our_owncomment_as_100.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Destroy Any",
+    "file": "sounds/Protoss/destroy_any.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Destructions Not A Man",
+    "file": "sounds/Protoss/destructions_not_a_man.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Do Not Provoke Me To Violence You Could No More Ev",
+    "file": "sounds/Protoss/do_not_provoke_me_to_violence_you_could_no_more_ev.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Dont You Feel You Are Broken",
+    "file": "sounds/Protoss/dont_you_feel_you_are_broken.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Dont You Think That He Was Doing This Bad",
+    "file": "sounds/Protoss/dont_you_think_that_he_was_doing_this_bad.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Ekosougin \ud06c\ub85c\ub4dc\uac00",
+    "file": "sounds/Protoss/ekosougin_\ud06c\ub85c\ub4dc\uac00.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Entire Role Adjuning",
+    "file": "sounds/Protoss/entire_role_adjuning.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Excitement",
+    "file": "sounds/Protoss/excitement.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "F Show Kens Seriously 1 St \uc5b4\ub9b0Z\u0105 22 2",
+    "file": "sounds/Protoss/f_show_kens_seriously_1_st_\uc5b4\ub9b0z\u0105_22_2.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Fantasy Of For Franchise Uns Time Likely Sk\u0e2d\u0e19Ck Mo",
+    "file": "sounds/Protoss/fantasy_of_for_franchise_uns_time_likely_sk\u0e2d\u0e19ck_mo.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "For A Done",
+    "file": "sounds/Protoss/for_a_done.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "For Our Strength Is Eternal Executor",
+    "file": "sounds/Protoss/for_our_strength_is_eternal_executor.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "For The Comma Is My Strength",
+    "file": "sounds/Protoss/for_the_comma_is_my_strength.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "For Vengeance",
+    "file": "sounds/Protoss/for_vengeance.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Forte \uc784 \u0421\u043b\u0435\u0434ists Already Had Them Arrested They We",
+    "file": "sounds/Protoss/forte_\uc784_\u0441\u043b\u0435\u0434ists_already_had_them_arrested_they_we.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Geahouse Haunted House Beautiful Sparkling",
+    "file": "sounds/Protoss/geahouse_haunted_house_beautiful_sparkling.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Gel Year Has Arrived",
+    "file": "sounds/Protoss/gel_year_has_arrived.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Goals Affirmative",
+    "file": "sounds/Protoss/goals_affirmative.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Guys Not A Guy",
+    "file": "sounds/Protoss/guys_not_a_guy.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Help Me I Hope",
+    "file": "sounds/Protoss/help_me_i_hope.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Hey Tarot What Doon",
+    "file": "sounds/Protoss/hey_tarot_what_doon.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Honor Died Me",
+    "file": "sounds/Protoss/honor_died_me.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "How May I Help You",
+    "file": "sounds/Protoss/how_may_i_help_you.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I A Boy Ciao",
+    "file": "sounds/Protoss/i_a_boy_ciao.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Am The Leader",
+    "file": "sounds/Protoss/i_am_the_leader.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Do Not Think You Will See What Will Happen",
+    "file": "sounds/Protoss/i_do_not_think_you_will_see_what_will_happen.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Do This For Ir",
+    "file": "sounds/Protoss/i_do_this_for_ir.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Dont Have Time For Games",
+    "file": "sounds/Protoss/i_dont_have_time_for_games.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Fear No Enemy",
+    "file": "sounds/Protoss/i_fear_no_enemy.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Fear Not To Death",
+    "file": "sounds/Protoss/i_fear_not_to_death.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Got All Throughed It Nos I Serve",
+    "file": "sounds/Protoss/i_got_all_throughed_it_nos_i_serve.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Got To See You",
+    "file": "sounds/Protoss/i_got_to_see_you.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Hear You",
+    "file": "sounds/Protoss/i_hear_you.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Long For Combat",
+    "file": "sounds/Protoss/i_long_for_combat.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I See You Have An Arbitant For Destruction",
+    "file": "sounds/Protoss/i_see_you_have_an_arbitant_for_destruction.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Sense A Soul In Search Of Answer",
+    "file": "sounds/Protoss/i_sense_a_soul_in_search_of_answer.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Shall Be Done",
+    "file": "sounds/Protoss/i_shall_be_done.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Was Executed For Long Before You So Do Not Try M",
+    "file": "sounds/Protoss/i_was_executed_for_long_before_you_so_do_not_try_m.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "I Will Not",
+    "file": "sounds/Protoss/i_will_not.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Im Here",
+    "file": "sounds/Protoss/im_here.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Im Waiting Nirah Scoodil For I Turn It Mod",
+    "file": "sounds/Protoss/im_waiting_nirah_scoodil_for_i_turn_it_mod.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "In And Of",
+    "file": "sounds/Protoss/in_and_of.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Into Sand",
+    "file": "sounds/Protoss/into_sand.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "It Shall Be Done",
+    "file": "sounds/Protoss/it_shall_be_done.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "It Should Have Set A Pomegranate",
+    "file": "sounds/Protoss/it_should_have_set_a_pomegranate.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "It Will Be Done",
+    "file": "sounds/Protoss/it_will_be_done.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "It Will Be Done 1",
+    "file": "sounds/Protoss/it_will_be_done_1.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "It Will Continue",
+    "file": "sounds/Protoss/it_will_continue.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Its Beginning For",
+    "file": "sounds/Protoss/its_beginning_for.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "January M Replaced",
+    "file": "sounds/Protoss/january_m_replaced.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Just In Your Transition",
+    "file": "sounds/Protoss/just_in_your_transition.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Kill Us",
+    "file": "sounds/Protoss/kill_us.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Las Vegas",
+    "file": "sounds/Protoss/las_vegas.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Learn Home",
+    "file": "sounds/Protoss/learn_home.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Locus Acknowledged",
+    "file": "sounds/Protoss/locus_acknowledged.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Male Hero",
+    "file": "sounds/Protoss/male_hero.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Moody Calls",
+    "file": "sounds/Protoss/moody_calls.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Mortal Nice",
+    "file": "sounds/Protoss/mortal_nice.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "My Dad Is Sad",
+    "file": "sounds/Protoss/my_dad_is_sad.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "My Lifes A Liar",
+    "file": "sounds/Protoss/my_lifes_a_liar.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "N I I L E T",
+    "file": "sounds/Protoss/n_i_i_l_e_t.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "No No Not Right Now",
+    "file": "sounds/Protoss/no_no_not_right_now.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Not Tie",
+    "file": "sounds/Protoss/not_tie.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Now Lets ",
+    "file": "sounds/Protoss/now_lets_.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Nuclear Launch Detected Upgrade Complete",
+    "file": "sounds/Protoss/nuclear_launch_detected_upgrade_complete.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Obcript",
+    "file": "sounds/Protoss/obcript.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Of Course",
+    "file": "sounds/Protoss/of_course.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Oh For The Empire",
+    "file": "sounds/Protoss/oh_for_the_empire.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "One Octave From Here One Time She Stopped Poking M",
+    "file": "sounds/Protoss/one_octave_from_here_one_time_she_stopped_poking_m.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Our Enemies Are Legion",
+    "file": "sounds/Protoss/our_enemies_are_legion.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Power Overwhelming",
+    "file": "sounds/Protoss/power_overwhelming.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Receiving",
+    "file": "sounds/Protoss/receiving.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Research Complete",
+    "file": "sounds/Protoss/research_complete.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Respect The",
+    "file": "sounds/Protoss/respect_the.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Robot Soup",
+    "file": "sounds/Protoss/robot_soup.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Self Brandon \u0627\u0644\u0628 Argue Is Ruined",
+    "file": "sounds/Protoss/self_brandon_\u0627\u0644\u0628_argue_is_ruined.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 004",
+    "file": "sounds/Protoss/sfx_004.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 005",
+    "file": "sounds/Protoss/sfx_005.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 007",
+    "file": "sounds/Protoss/sfx_007.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 010",
+    "file": "sounds/Protoss/sfx_010.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 024",
+    "file": "sounds/Protoss/sfx_024.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 025",
+    "file": "sounds/Protoss/sfx_025.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 027",
+    "file": "sounds/Protoss/sfx_027.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 028",
+    "file": "sounds/Protoss/sfx_028.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 031",
+    "file": "sounds/Protoss/sfx_031.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 038",
+    "file": "sounds/Protoss/sfx_038.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 039",
+    "file": "sounds/Protoss/sfx_039.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 050",
+    "file": "sounds/Protoss/sfx_050.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 075",
+    "file": "sounds/Protoss/sfx_075.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 081",
+    "file": "sounds/Protoss/sfx_081.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 082",
+    "file": "sounds/Protoss/sfx_082.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 086",
+    "file": "sounds/Protoss/sfx_086.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 092",
+    "file": "sounds/Protoss/sfx_092.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 093",
+    "file": "sounds/Protoss/sfx_093.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 096",
+    "file": "sounds/Protoss/sfx_096.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 097",
+    "file": "sounds/Protoss/sfx_097.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 101",
+    "file": "sounds/Protoss/sfx_101.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 112",
+    "file": "sounds/Protoss/sfx_112.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 113",
+    "file": "sounds/Protoss/sfx_113.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 114",
+    "file": "sounds/Protoss/sfx_114.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 116",
+    "file": "sounds/Protoss/sfx_116.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 117",
+    "file": "sounds/Protoss/sfx_117.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 120",
+    "file": "sounds/Protoss/sfx_120.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 123",
+    "file": "sounds/Protoss/sfx_123.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 124",
+    "file": "sounds/Protoss/sfx_124.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 127",
+    "file": "sounds/Protoss/sfx_127.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 129",
+    "file": "sounds/Protoss/sfx_129.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 130",
+    "file": "sounds/Protoss/sfx_130.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 143",
+    "file": "sounds/Protoss/sfx_143.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 144",
+    "file": "sounds/Protoss/sfx_144.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 145",
+    "file": "sounds/Protoss/sfx_145.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 151",
+    "file": "sounds/Protoss/sfx_151.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 152",
+    "file": "sounds/Protoss/sfx_152.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 166",
+    "file": "sounds/Protoss/sfx_166.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 173",
+    "file": "sounds/Protoss/sfx_173.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 181",
+    "file": "sounds/Protoss/sfx_181.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 188",
+    "file": "sounds/Protoss/sfx_188.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 189",
+    "file": "sounds/Protoss/sfx_189.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 192",
+    "file": "sounds/Protoss/sfx_192.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 200",
+    "file": "sounds/Protoss/sfx_200.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sfx 206",
+    "file": "sounds/Protoss/sfx_206.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Shortly Going For A Volunteer",
+    "file": "sounds/Protoss/shortly_going_for_a_volunteer.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Signal Unstable State",
+    "file": "sounds/Protoss/signal_unstable_state.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "So Do Not Try My Patience",
+    "file": "sounds/Protoss/so_do_not_try_my_patience.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "So Gone",
+    "file": "sounds/Protoss/so_gone.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "So Weird",
+    "file": "sounds/Protoss/so_weird.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Son Of A Bitch",
+    "file": "sounds/Protoss/son_of_a_bitch.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sound \u05d0\u05da",
+    "file": "sounds/Protoss/sound_\u05d0\u05da.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Speak Quickly Executive",
+    "file": "sounds/Protoss/speak_quickly_executive.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Speak Quickly Secretary My Dont Have Time For Game",
+    "file": "sounds/Protoss/speak_quickly_secretary_my_dont_have_time_for_game.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Stay Peace",
+    "file": "sounds/Protoss/stay_peace.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Sur Naszym Ferrari",
+    "file": "sounds/Protoss/sur_naszym_ferrari.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "T Gopro",
+    "file": "sounds/Protoss/t_gopro.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Tao Fu Wei Apprentices",
+    "file": "sounds/Protoss/tao_fu_wei_apprentices.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Teleport Successienne",
+    "file": "sounds/Protoss/teleport_successienne.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Thank You For Watching Pop Videos",
+    "file": "sounds/Protoss/thank_you_for_watching_pop_videos.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "That Was Loneliness",
+    "file": "sounds/Protoss/that_was_loneliness.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "The Purging Is Complete",
+    "file": "sounds/Protoss/the_purging_is_complete.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "There You Go Zoeugeum",
+    "file": "sounds/Protoss/there_you_go_zoeugeum.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "This Guy Noises One\u8ddf\u5927\u5bb6",
+    "file": "sounds/Protoss/this_guy_noises_one\u8ddf\u5927\u5bb6.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "This Is Recorded Making Fun Of You As Well",
+    "file": "sounds/Protoss/this_is_recorded_making_fun_of_you_as_well.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "This Truck Is Very Fluid And It Feels More Like Ca",
+    "file": "sounds/Protoss/this_truck_is_very_fluid_and_it_feels_more_like_ca.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Thislines That Build Us Make You So For Me",
+    "file": "sounds/Protoss/thislines_that_build_us_make_you_so_for_me.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "This\u9032 To Silence Of Hurting The Soldiers To Make I",
+    "file": "sounds/Protoss/this\u9032_to_silence_of_hurting_the_soldiers_to_make_i.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Time For Something Special Soundtrack Rain Aw Zhan",
+    "file": "sounds/Protoss/time_for_something_special_soundtrack_rain_aw_zhan.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Total Color",
+    "file": "sounds/Protoss/total_color.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Uh Huh",
+    "file": "sounds/Protoss/uh_huh.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "We All Look So Different On This Side",
+    "file": "sounds/Protoss/we_all_look_so_different_on_this_side.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "We Gonna",
+    "file": "sounds/Protoss/we_gonna.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "We Make Focus",
+    "file": "sounds/Protoss/we_make_focus.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "We Since The Soul And Such Evancers Do You Seek Kn",
+    "file": "sounds/Protoss/we_since_the_soul_and_such_evancers_do_you_seek_kn.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "We Will Do What We Must",
+    "file": "sounds/Protoss/we_will_do_what_we_must.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "What Does There Be",
+    "file": "sounds/Protoss/what_does_there_be.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "What Feels Stabilized We Feel Youre Presence Of Th",
+    "file": "sounds/Protoss/what_feels_stabilized_we_feel_youre_presence_of_th.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Whatever Turned",
+    "file": "sounds/Protoss/whatever_turned.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Whats It Going With The Ray",
+    "file": "sounds/Protoss/whats_it_going_with_the_ray.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Whats That Whats That Whats That",
+    "file": "sounds/Protoss/whats_that_whats_that_whats_that.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Whats The Point",
+    "file": "sounds/Protoss/whats_the_point.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Whats Your Name Who Know Youre Mine",
+    "file": "sounds/Protoss/whats_your_name_who_know_youre_mine.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Www Jeremyperele Lacan",
+    "file": "sounds/Protoss/www_jeremyperele_lacan.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Yes Executive I Hear You",
+    "file": "sounds/Protoss/yes_executive_i_hear_you.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Yes Secretary",
+    "file": "sounds/Protoss/yes_secretary.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "You",
+    "file": "sounds/Protoss/you.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "You Address Me",
+    "file": "sounds/Protoss/you_address_me.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "You Have Not Enough Minerals",
+    "file": "sounds/Protoss/you_have_not_enough_minerals.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "You Have Persecuted Us For Generations",
+    "file": "sounds/Protoss/you_have_persecuted_us_for_generations.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "You Require More Vest Being Gas You Must Construct",
+    "file": "sounds/Protoss/you_require_more_vest_being_gas_you_must_construct.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "You Think Its I Too",
+    "file": "sounds/Protoss/you_think_its_i_too.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "You Will",
+    "file": "sounds/Protoss/you_will.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Your Command What Would You Ask Of Me I Hunger For",
+    "file": "sounds/Protoss/your_command_what_would_you_ask_of_me_i_hunger_for.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Your Orders Templarra",
+    "file": "sounds/Protoss/your_orders_templarra.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Your Thoughts Betray You",
+    "file": "sounds/Protoss/your_thoughts_betray_you.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Your Time Is Here In Advice Templar",
+    "file": "sounds/Protoss/your_time_is_here_in_advice_templar.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Your Will Of Course You Shall Be Done For A Dune T",
+    "file": "sounds/Protoss/your_will_of_course_you_shall_be_done_for_a_dune_t.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Youre Over Us Youve Digggg",
+    "file": "sounds/Protoss/youre_over_us_youve_digggg.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Z M G I",
+    "file": "sounds/Protoss/z_m_g_i.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Zada Hurry Now",
+    "file": "sounds/Protoss/zada_hurry_now.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "Zzzzz Questions",
+    "file": "sounds/Protoss/zzzzz_questions.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "\u039a\u03b1ained Or Stole",
+    "file": "sounds/Protoss/\u03ba\u03b1ained_or_stole.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "\u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f \u04d8\u043f",
+    "file": "sounds/Protoss/\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f_\u04d9\u043f.mp3"
+  },
+  {
+    "race": "protoss",
+    "title": "\uacfc Dans Les Partois On A Level 4",
+    "file": "sounds/Protoss/\uacfc_dans_les_partois_on_a_level_4.mp3"
+  },
+  {
+    "race": "misc",
+    "title": " And So Theyre Also Talking About His Great Family",
+    "file": "sounds/Misc/_and_so_theyre_also_talking_about_his_great_family.mp3"
+  },
+  {
+    "race": "misc",
+    "title": " Early\u58d3",
+    "file": "sounds/Misc/_early\u58d3.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "All I Could Do",
+    "file": "sounds/Misc/all_i_could_do.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "And You",
+    "file": "sounds/Misc/and_you.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Another Heavy Buckster On The Back Of His Head Thi",
+    "file": "sounds/Misc/another_heavy_buckster_on_the_back_of_his_head_thi.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Aspire",
+    "file": "sounds/Misc/aspire.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Aw Ciao Ooh",
+    "file": "sounds/Misc/aw_ciao_ooh.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Beep Brow\u0bb1",
+    "file": "sounds/Misc/beep_brow\u0bb1.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Blvi",
+    "file": "sounds/Misc/blvi.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "But Hey It Is",
+    "file": "sounds/Misc/but_hey_it_is.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "C Clear",
+    "file": "sounds/Misc/c_clear.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Cabe\u00e7a",
+    "file": "sounds/Misc/cabe\u00e7a.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Can We Avoid The Paw",
+    "file": "sounds/Misc/can_we_avoid_the_paw.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Canci\u00f3n",
+    "file": "sounds/Misc/canci\u00f3n.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Context",
+    "file": "sounds/Misc/context.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Epy Music",
+    "file": "sounds/Misc/epy_music.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Ese Eyes",
+    "file": "sounds/Misc/ese_eyes.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "F Robinson Garcia",
+    "file": "sounds/Misc/f_robinson_garcia.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Findgreat Funniest Or Funny\u0443\u0442 Tweeted",
+    "file": "sounds/Misc/findgreat_funniest_or_funny\u0443\u0442_tweeted.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Geschichte How To",
+    "file": "sounds/Misc/geschichte_how_to.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Gundam",
+    "file": "sounds/Misc/gundam.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Hahaha",
+    "file": "sounds/Misc/hahaha.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Hello Ah Sot",
+    "file": "sounds/Misc/hello_ah_sot.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Laughter",
+    "file": "sounds/Misc/laughter.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Oooh He Got That One Uh Oh I Had A Plane Crash I J",
+    "file": "sounds/Misc/oooh_he_got_that_one_uh_oh_i_had_a_plane_crash_i_j.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Passabies",
+    "file": "sounds/Misc/passabies.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Please Subscribe On My Channel La T Ahora",
+    "file": "sounds/Misc/please_subscribe_on_my_channel_la_t_ahora.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Progesterone",
+    "file": "sounds/Misc/progesterone.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Realidade",
+    "file": "sounds/Misc/realidade.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Remember Your \u041e\u0431\u0449\u0435\u043cra",
+    "file": "sounds/Misc/remember_your_\u043e\u0431\u0449\u0435\u043cra.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Run Run Run Run Run",
+    "file": "sounds/Misc/run_run_run_run_run.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Russel",
+    "file": "sounds/Misc/russel.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 000",
+    "file": "sounds/Misc/sfx_000.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 002",
+    "file": "sounds/Misc/sfx_002.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 003",
+    "file": "sounds/Misc/sfx_003.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 004",
+    "file": "sounds/Misc/sfx_004.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 005",
+    "file": "sounds/Misc/sfx_005.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 006",
+    "file": "sounds/Misc/sfx_006.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 007",
+    "file": "sounds/Misc/sfx_007.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 009",
+    "file": "sounds/Misc/sfx_009.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 011",
+    "file": "sounds/Misc/sfx_011.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 012",
+    "file": "sounds/Misc/sfx_012.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 013",
+    "file": "sounds/Misc/sfx_013.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 015",
+    "file": "sounds/Misc/sfx_015.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 016",
+    "file": "sounds/Misc/sfx_016.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 017",
+    "file": "sounds/Misc/sfx_017.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 018",
+    "file": "sounds/Misc/sfx_018.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 025",
+    "file": "sounds/Misc/sfx_025.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 026",
+    "file": "sounds/Misc/sfx_026.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 028",
+    "file": "sounds/Misc/sfx_028.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 029",
+    "file": "sounds/Misc/sfx_029.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 031",
+    "file": "sounds/Misc/sfx_031.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 038",
+    "file": "sounds/Misc/sfx_038.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 039",
+    "file": "sounds/Misc/sfx_039.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 040",
+    "file": "sounds/Misc/sfx_040.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 044",
+    "file": "sounds/Misc/sfx_044.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 046",
+    "file": "sounds/Misc/sfx_046.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 049",
+    "file": "sounds/Misc/sfx_049.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 050",
+    "file": "sounds/Misc/sfx_050.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 051",
+    "file": "sounds/Misc/sfx_051.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 053",
+    "file": "sounds/Misc/sfx_053.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 054",
+    "file": "sounds/Misc/sfx_054.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 055",
+    "file": "sounds/Misc/sfx_055.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 056",
+    "file": "sounds/Misc/sfx_056.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 057",
+    "file": "sounds/Misc/sfx_057.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 059",
+    "file": "sounds/Misc/sfx_059.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 061",
+    "file": "sounds/Misc/sfx_061.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 062",
+    "file": "sounds/Misc/sfx_062.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 065",
+    "file": "sounds/Misc/sfx_065.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 066",
+    "file": "sounds/Misc/sfx_066.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 067",
+    "file": "sounds/Misc/sfx_067.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 069",
+    "file": "sounds/Misc/sfx_069.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 070",
+    "file": "sounds/Misc/sfx_070.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 073",
+    "file": "sounds/Misc/sfx_073.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 076",
+    "file": "sounds/Misc/sfx_076.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 077",
+    "file": "sounds/Misc/sfx_077.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 078",
+    "file": "sounds/Misc/sfx_078.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 079",
+    "file": "sounds/Misc/sfx_079.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 080",
+    "file": "sounds/Misc/sfx_080.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 081",
+    "file": "sounds/Misc/sfx_081.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 082",
+    "file": "sounds/Misc/sfx_082.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 085",
+    "file": "sounds/Misc/sfx_085.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 088",
+    "file": "sounds/Misc/sfx_088.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 089",
+    "file": "sounds/Misc/sfx_089.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 091",
+    "file": "sounds/Misc/sfx_091.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 092",
+    "file": "sounds/Misc/sfx_092.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 096",
+    "file": "sounds/Misc/sfx_096.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 097",
+    "file": "sounds/Misc/sfx_097.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 098",
+    "file": "sounds/Misc/sfx_098.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Sfx 099",
+    "file": "sounds/Misc/sfx_099.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Tell Me If You Got Anywhere Up There Did You Cant ",
+    "file": "sounds/Misc/tell_me_if_you_got_anywhere_up_there_did_you_cant_.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Thank You",
+    "file": "sounds/Misc/thank_you.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Thanking On Sexal Samu",
+    "file": "sounds/Misc/thanking_on_sexal_samu.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Thanks For Watching Everyone A Bit Dear",
+    "file": "sounds/Misc/thanks_for_watching_everyone_a_bit_dear.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Whats Up",
+    "file": "sounds/Misc/whats_up.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Why The Hell The Hell Will Those School Be Discove",
+    "file": "sounds/Misc/why_the_hell_the_hell_will_those_school_be_discove.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Woah",
+    "file": "sounds/Misc/woah.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Written Out Fades",
+    "file": "sounds/Misc/written_out_fades.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Www Graphicsflorecom",
+    "file": "sounds/Misc/www_graphicsflorecom.mp3"
+  },
+  {
+    "race": "misc",
+    "title": "Wwwtheped Dynamic Physics",
+    "file": "sounds/Misc/wwwtheped_dynamic_physics.mp3"
+  }
+];
+        let currentRace = 'terran';
+        let audioPlayer = new Audio();
+        let currentCardIndex = null;
+        let switchSound = new Audio('sounds/Misc/click.mp3');
+
+        function renderSounds() {
+            const grid = document.getElementById('soundGrid');
+            const filtered = sounds.filter(s => s.race === currentRace);
+            
+            document.getElementById('stats').textContent = `Showing ${filtered.length} sounds`;
+            
+            grid.innerHTML = filtered.map((sound, index) => `
+                <div class="sound-card" id="card-${index}">
+                    <div class="progress-bar" id="progress-${index}"></div>
+                    <span class="sound-title" title="${sound.title}">${sound.title}</span>
+                    <button class="btn btn-play" onclick="playSound('${sound.file}', ${index})">▶</button>
+                    <button class="btn btn-download" onclick="downloadSound('${sound.file}', '${sound.title}')">⬇</button>
+                </div>
+            `).join('');
+        }
+
+        function playSound(file, index) {
+            // Reset previous card
+            if (currentCardIndex !== null) {
+                const prevCard = document.getElementById(`card-${currentCardIndex}`);
+                const prevProgress = document.getElementById(`progress-${currentCardIndex}`);
+                if (prevCard) prevCard.classList.remove('playing');
+                if (prevProgress) prevProgress.style.width = '0%';
+            }
+
+            currentCardIndex = index;
+            const card = document.getElementById(`card-${index}`);
+            const progressBar = document.getElementById(`progress-${index}`);
+            
+            audioPlayer.src = file;
+            audioPlayer.play();
+            
+            if (card) card.classList.add('playing');
+
+            // Update progress bar
+            audioPlayer.ontimeupdate = () => {
+                if (audioPlayer.duration && progressBar) {
+                    const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    progressBar.style.width = progress + '%';
+                }
+            };
+
+            // Reset on end
+            audioPlayer.onended = () => {
+                if (card) card.classList.remove('playing');
+                if (progressBar) progressBar.style.width = '0%';
+                currentCardIndex = null;
+            };
+        }
+
+        function downloadSound(file, title) {
+            const a = document.createElement('a');
+            a.href = file;
+            a.download = title + '.mp3';
+            a.click();
+        }
+
+        document.querySelectorAll('.race-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.race-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentRace = tab.dataset.race;
+                switchSound.currentTime = 0;
+                switchSound.play();
+                renderSounds();
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            const tab = document.querySelector(`.race-tab[data-key="${key}"]`);
+            if (tab) {
+                document.querySelectorAll('.race-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentRace = tab.dataset.race;
+                switchSound.currentTime = 0;
+                switchSound.play();
+                renderSounds();
+            }
+        });
+
+        renderSounds();
+    </script>
+</body>
+</html>
