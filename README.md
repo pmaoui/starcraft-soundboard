@@ -2,7 +2,7 @@
 
 An interactive web-based soundboard featuring 644 sound effects and quotes from the original StarCraft game (1998).
 
-🎮 **[Live Demo](https://YOUR_USERNAME.github.io/starcraft-soundboard/)**
+🎮 **[Live Demo](https://pmaoui.github.io/starcraft-soundboard/)**
 
 ![StarCraft Soundboard](https://upload.wikimedia.org/wikipedia/commons/0/0a/StarCraft_Logo.png)
 
@@ -32,7 +32,7 @@ Custom fonts:
 ## 🚀 Usage
 
 ### Online
-Visit the live soundboard at: [Your GitHub Pages URL]
+Visit the live soundboard at: **https://pmaoui.github.io/starcraft-soundboard/**
 
 ### Local
 1. Clone this repository
